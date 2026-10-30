@@ -7,17 +7,24 @@ jobs:
       - uses: actions/checkout@v4
       - name: deps
         run: sudo apt-get update && sudo apt-get install -y make clang dpkg-dev fakeroot libplist-utils xz-utils libssl-dev
-      - name: theos
+      - name: setup
         run: |
-          git clone --recursive https://github.com/theos/theos.git $HOME/theos
-          echo "THEOS=$HOME/theos" >> $GITHUB_ENV
-      - name: sdks
-        run: git clone https://github.com/theos/sdks $HOME/theos/sdks
-      - name: ldid
-        run: |
-          sudo curl -L -o /usr/local/bin/ldid https://github.com/ProcursusTeam/ldid/releases/latest/download/ldid_linux_x86_64
+          set -e
+          mkdir -p $HOME/theos
+          curl -sSL https://github.com/theos/theos/archive/refs/heads/master.tar.gz -o /tmp/a.tgz
+          tar xzf /tmp/a.tgz -C /tmp
+          cp -r /tmp/theos-master/. $HOME/theos/
+          curl -sSL https://github.com/theos/vendor/archive/refs/heads/master.tar.gz -o /tmp/b.tgz
+          tar xzf /tmp/b.tgz -C /tmp
+          cp -r /tmp/vendor-master/. $HOME/theos/vendor/
+          curl -sSL https://github.com/theos/toolchain/archive/refs/heads/master.tar.gz -o /tmp/c.tgz
+          tar xzf /tmp/c.tgz -C /tmp
+          mkdir -p $HOME/theos/toolchain
+          cp -r /tmp/toolchain-master/linux $HOME/theos/toolchain/
+          chmod -R +x $HOME/theos/toolchain/linux/iphone/bin
+          sudo curl -sSL -o /usr/local/bin/ldid https://github.com/ProcursusTeam/ldid/releases/latest/download/ldid_linux_x86_64
           sudo chmod +x /usr/local/bin/ldid
-          ldid -h > /dev/null
+          echo "THEOS=$HOME/theos" >> $GITHUB_ENV
       - name: build
         run: make package FINALPACKAGE=1 THEOS_PACKAGE_SCHEME=rootless
       - uses: actions/upload-artifact@v4
