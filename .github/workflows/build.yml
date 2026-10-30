@@ -5,13 +5,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: |
+      - name: setup
+        run: |
           sudo apt-get update
-          sudo apt-get install -y make clang dpkg-dev fakeroot libplist-utils xz-utils
-          git clone --recursive --depth 1 https://github.com/theos/theos.git $HOME/theos
-          git clone --depth 1 https://github.com/theos/sdks $HOME/theos/sdks
-          sudo curl -L https://github.com/ProcursusTeam/ldid/releases/latest/download/ldid_linux_x86_64 -o /usr/local/bin/ldid
+          sudo apt-get install -y make clang dpkg-dev fakeroot libplist-utils xz-utils libssl-dev
+          git clone --recursive https://github.com/theos/theos.git $HOME/theos
+          git clone https://github.com/theos/sdks $HOME/theos/sdks
+          sudo curl -L -o /usr/local/bin/ldid https://github.com/ProcursusTeam/ldid/releases/latest/download/ldid_linux_x86_64
           sudo chmod +x /usr/local/bin/ldid
+          ldid -h >/dev/null && echo "ldid ok"
           echo "THEOS=$HOME/theos" >> $GITHUB_ENV
       - run: make package FINALPACKAGE=1 THEOS_PACKAGE_SCHEME=rootless
       - uses: actions/upload-artifact@v4
